@@ -1,24 +1,24 @@
 import './style.css';
 
-import { Chart, ChartOptions, ChartTypeRegistry } from 'chart.js/auto';
+import { Chart, ChartOptions, ChartEvent, ChartTypeRegistry } from 'chart.js/auto';
 // import { getRelativePosition } from 'chart.js/helpers';
 import * as dragData from 'chartjs-plugin-dragdata';
-import { rgbString } from '@kurkle/color';
-
 
 const DATA_COUNT = 7;
 
-const ctx = (document.getElementById('myChart') as HTMLCanvasElement).getContext('2d');
+const ctx = (
+  document.getElementById('myChart') as HTMLCanvasElement
+).getContext('2d');
 
-export const plugins = [dragData];
+const plugins = [dragData];
 Chart.register(plugins);
 const config: ChartOptions = {
   type: 'line',
   data: {
     labels: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
     datasets: [
-      { 
-        label: "  Temperature",
+      {
+        label: '  Temperature',
         data: [10, 13, 13, 15, 6, 9],
         borderColor: '#ff0016',
         backgroundColor: '#11aa88',
@@ -31,8 +31,8 @@ const config: ChartOptions = {
         borderWidth: 3,
         borderColor: '#4dc9f6',
         backgroundColor: '#000000',
-        pointHitRadius: 25,   
-        stepped: true     
+        pointHitRadius: 25,
+        stepped: true,
       },
       {
         label: '  Velocity',
@@ -53,7 +53,7 @@ const config: ChartOptions = {
         max: 20,
       },
     },
-    onHover: function (e) {
+    onHover: function (e : ChartEvent) {
       const point = e.chart.getElementsAtEventForMode(
         e,
         'nearest',
@@ -84,5 +84,3 @@ const config: ChartOptions = {
 };
 
 const chart = new Chart(ctx, config);
-
-
