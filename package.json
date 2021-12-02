@@ -1,0 +1,13 @@
+{
+  "name": "rxjs",
+  "version": "0.0.0",
+  "private": true,
+  "dependencies": {
+    "@kurkle/color": "^0.1.9",
+    "chart.js": "3.6.1",
+    "chartjs-adapter-luxon": "^1.1.0",
+    "chartjs-plugin-dragdata": "^2.2.2",
+    "luxon": "^2.1.1",
+    "rxjs": "7.4.0"
+  }
+}
