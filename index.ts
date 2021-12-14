@@ -1,13 +1,9 @@
 import './style.css';
 
-import {
-  Chart,
-  ChartOptions,
-  ChartEvent,
-  ChartTypeRegistry,
-} from 'chart.js/auto';
+import { Chart, ChartOptions, ChartEvent } from 'chart.js/auto';
 // import { getRelativePosition } from 'chart.js/helpers';
 import * as dragData from 'chartjs-plugin-dragdata';
+import ChartJSdragSegment from 'chartjs-plugin-dragsegment';
 
 const DATA_COUNT = 7;
 
@@ -18,8 +14,11 @@ const ctx = (
 const tempRange = document.getElementById('tempRange');
 tempRange.addEventListener('change', onTempValueChange);
 
-const plugins = [dragData];
+const plugins = [dragData, ChartJSdragSegment];
+// const plugins = [ChartJSdragSegment];
+
 Chart.register(plugins);
+
 const config: ChartOptions = {
   type: 'line',
   data: {
@@ -40,7 +39,7 @@ const config: ChartOptions = {
       },
       {
         data: [10.5, 12.3, 12.6, 13.8, 3, 7.9],
-        borderWidth: 1,
+        borderWidth: 2,
         borderColor: 'rgba(255,0,0,0.1)',
         backgroundColor: 'rgba(255,0,0,0)',
       },
@@ -48,22 +47,28 @@ const config: ChartOptions = {
         label: '  Pressure',
         data: [12, 19, 3, 5, 2, 3],
         fill: false,
-        tension: 0.2,
-        borderWidth: 4,
+        tension: 0.0,
+        borderWidth: 1,
         borderColor: '#4dc9f6',
         backgroundColor: '#000000',
         pointHitRadius: 25,
-        stepped: true,
+        borderCapStyle: 'square',
+        borderJoinStyle: 'bevel', // round, miter
+        pointStyle: 'rect', // "circle" | "cross" | "crossRot" | "dash" | "line" | "rect" | "rectRounded" | "rectRot" | "star" | "triangle" | HTMLImageElement | HTMLCanvasElemen
+        radius: 6,
+        rotation: 45,
+        stepped: 'middle', // true/false, 'before', ' middle' 'after'
       },
       {
         label: '  Velocity',
         data: [7, 11, 5, 8, 3, 7],
         fill: false,
         tension: 0.4,
-        borderWidth: 6,
+        borderWidth: 4,
+        borderDash: [12, 4, 4, 4],
         borderColor: '#4dc900',
         backgroundColor: '#ffffff',
-        pointHitRadius: 25,
+        pointHitRadius: 5,
       },
     ],
   },
@@ -81,23 +86,61 @@ const config: ChartOptions = {
         { intersect: true },
         false
       );
-      /*if (point.length) e.native.target.style.cursor = 'grab';
-      else e.native.target.style.cursor = 'default';*/
+      if (point.length) e.native.target.style.cursor = 'grab';
+      else e.native.target.style.cursor = 'default';
     },
     onClick: function (e: ChartEvent) {
-      console.log("Clicki")
-      // chart.getElementsAtEventForMode(e.native,'',)
+      console.log(
+        chart.getElementsAtEventForMode(
+          e.native,
+          'dataset', // index, dataset, point, nearest, x,y
+          { intersect: false },
+          false
+        )
+      );
     },
     plugins: {
       legend: {
         labels: {
           filter: function (item, chart) {
-            // Logic to remove a particular legend item goes here            
+            // Logic to remove a particular legend item goes here
             return item.text !== undefined;
           },
         },
       },
 
+      dragSegment: {
+        // allow to drag segments verticaly (default: true)
+        vertical: true,
+
+        // allow to drag segments horizontaly (default: false)
+        horizontal: false,
+
+        // onDrag will be executed before coordinates updating
+        // @chart - ChartJS instance
+        // @points - Object , of points {x, y} for each dataset, witch will update their coordinates
+        //   points = {
+        //     datasetIndex: {
+        //       elementIndex: {
+        //         x // optional, not present if not modified
+        //         y // optional, not present if not modified
+        //       }
+        //     }
+        //   }
+        //   You can set new values (add, remove, ...) for points
+        onDragStart: (chart, points) => {
+          console.log('drag seg start');
+          return true;
+        },
+        onDrag(chart, points) {
+          console.log('drag seg');
+          /*if (Math.random() < 0.5) {
+            return false;
+          }*/
+          return true;
+        },
+      },
+      
       dragData: {
         round: 1,
         showTooltip: true,
@@ -107,6 +150,7 @@ const config: ChartOptions = {
         onDrag: function (e, datasetIndex, index, value) {
           e.target.style.cursor = 'grabbing';
           //console.log(e, datasetIndex, index, value)
+          return value >=2 && value <=19
         },
         onDragEnd: function (e, datasetIndex, index, value) {
           e.target.style.cursor = 'default';
