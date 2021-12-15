@@ -1,9 +1,11 @@
 import './style.css';
 
-import { Chart, ChartOptions, ChartEvent } from 'chart.js/auto';
+import { Chart, ChartOptions, ChartEvent, Point, ChartConfiguration } from 'chart.js/auto';
 // import { getRelativePosition } from 'chart.js/helpers';
 import * as dragData from 'chartjs-plugin-dragdata';
-import ChartJSdragSegment from 'chartjs-plugin-dragsegment';
+import {CrosshairPlugin,Interpolate} from 'chartjs-plugin-crosshair';
+// import ChartJSdragSegment from 'chartjs-plugin-dragsegment';
+// import { select } from 'd3-selection';
 
 const DATA_COUNT = 7;
 
@@ -14,24 +16,25 @@ const ctx = (
 const tempRange = document.getElementById('tempRange');
 tempRange.addEventListener('change', onTempValueChange);
 
-const plugins = [dragData, ChartJSdragSegment];
+const plugins = [dragData,];
 // const plugins = [ChartJSdragSegment];
 
 Chart.register(plugins);
 
-const config: ChartOptions = {
+const config: ChartConfiguration = {
   type: 'line',
   data: {
-    labels: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
+    // labels: ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'],
     datasets: [
       {
         label: '  Temperature',
-        data: [10, 13, 13, 15, 6, 9],
+        data: [{x:1,y:10},{x:2,y:13},{x:3,y:13},{x:4,y:15},{x:5,y:7}, {x:6,y:9}],
         borderWidth: 2,
         borderColor: '#ff0016',
         backgroundColor: '#11aa88',
+        hidden: false
       },
-      {
+     /* {
         data: [11, 12.5, 12.8, 14, 4.4, 8.5],
         borderWidth: 1,
         borderColor: 'rgba(255,0,0,0.4)',
@@ -69,7 +72,7 @@ const config: ChartOptions = {
         borderColor: '#4dc900',
         backgroundColor: '#ffffff',
         pointHitRadius: 5,
-      },
+      },*/
     ],
   },
   options: {
@@ -78,7 +81,56 @@ const config: ChartOptions = {
         min: 0,
         max: 20,
       },
+      x: {
+        type: 'linear',
+        title: {
+          display: true,
+          text: 'Foo'
+        },
+        ticks: {
+          callback: function(val:number, index) {
+            // Hide every 2nd tick label
+            return val % 2 === 0 ? String(val) : '';
+          },
+          color: 'green',
+        },
+        min: 0,
+        max: 10
+      }
     },
+    // drag segment is not working with 3.6.1
+    //
+    /* dragSegment: {
+      // allow to drag segments verticaly (default: true)
+      vertical: true,
+
+      // allow to drag segments horizontaly (default: false)
+      horizontal: false,
+
+      // onDrag will be executed before coordinates updating
+      // @chart - ChartJS instance
+      // @points - Object , of points {x, y} for each dataset, witch will update their coordinates
+      //   points = {
+      //     datasetIndex: {
+      //       elementIndex: {
+      //         x // optional, not present if not modified
+      //         y // optional, not present if not modified
+      //       }
+      //     }
+      //   }
+      //   You can set new values (add, remove, ...) for points
+      onDragStart: (chart, points) => {
+        console.log('drag seg start');
+        return true;
+      },
+      onDrag(chart, points) {
+        console.log('drag seg');
+        if (Math.random() < 0.5) {
+          return false;
+        }
+        return true;
+      },
+    },*/
     onHover: function (e: ChartEvent) {
       const point = chart.getElementsAtEventForMode(
         e.native,
@@ -86,8 +138,11 @@ const config: ChartOptions = {
         { intersect: true },
         false
       );
-      if (point.length) e.native.target.style.cursor = 'grab';
-      else e.native.target.style.cursor = 'default';
+      if (point.length) {
+        (e.native.target as HTMLElement).style.cursor = 'grab';
+      } else {
+        (e.native.target as HTMLElement).style.cursor = 'default';
+      }
     },
     onClick: function (e: ChartEvent) {
       console.log(
@@ -98,6 +153,7 @@ const config: ChartOptions = {
           false
         )
       );
+      return true;
     },
     plugins: {
       legend: {
@@ -109,59 +165,65 @@ const config: ChartOptions = {
         },
       },
 
-      dragSegment: {
-        // allow to drag segments verticaly (default: true)
-        vertical: true,
+      tooltip: {
+        
+        mode: 'point',
+        intersect: false
+      },
 
-        // allow to drag segments horizontaly (default: false)
-        horizontal: false,
-
-        // onDrag will be executed before coordinates updating
-        // @chart - ChartJS instance
-        // @points - Object , of points {x, y} for each dataset, witch will update their coordinates
-        //   points = {
-        //     datasetIndex: {
-        //       elementIndex: {
-        //         x // optional, not present if not modified
-        //         y // optional, not present if not modified
-        //       }
-        //     }
-        //   }
-        //   You can set new values (add, remove, ...) for points
-        onDragStart: (chart, points) => {
-          console.log('drag seg start');
-          return true;
+      crosshair: {
+        line: {
+          color: '#F66', // crosshair line color
+          width: 1, // crosshair line width
         },
-        onDrag(chart, points) {
-          console.log('drag seg');
-          /*if (Math.random() < 0.5) {
-            return false;
-          }*/
-          return true;
+        sync: {
+          enabled: true, // enable trace line syncing with other charts
+          group: 1, // chart group
+          suppressTooltips: false, // suppress tooltips when showing a synced tracer
+        },
+        zoom: {
+          enabled: true, // enable zooming
+          zoomboxBackgroundColor: 'rgba(66,133,244,0.2)', // background color of zoom box
+          zoomboxBorderColor: '#48F', // border color of zoom box
+          zoomButtonText: 'Reset Zoom', // reset zoom button text
+          zoomButtonClass: 'reset-zoom', // reset zoom button class
+        },
+        callbacks: {
+          beforeZoom: () =>
+            function (start, end) {
+              // called before zoom, return false to prevent zoom
+              return true;
+            },
+          afterZoom: () =>
+            function (start, end) {
+              // called after zoom
+            },
         },
       },
-      
+      //
       dragData: {
         round: 1,
         showTooltip: true,
         onDragStart: function (e, datasetIndex, index, value) {
           // console.log(e)
         },
-        onDrag: function (e, datasetIndex, index, value) {
+        onDrag: function (e, datasetIndex, index, value: Point) {
           e.target.style.cursor = 'grabbing';
-          //console.log(e, datasetIndex, index, value)
-          return value >=2 && value <=19
+          // console.log(e, datasetIndex, index, value)
+          return value.y >= 2 && value.y <= 19;
         },
-        onDragEnd: function (e, datasetIndex, index, value) {
+        onDragEnd: function (e, datasetIndex, index, value:Point) {
           e.target.style.cursor = 'default';
-          //console.log(datasetIndex, index, value)
+          console.log(datasetIndex, index, value);
+          return false;
         },
       },
     },
   },
 };
 
-const chart = new Chart(ctx, config);
+const chart = new Chart(ctx,config);
+
 tempRange.setAttribute('value', String(chart.data.datasets[0].borderWidth));
 
 export function onTempValueChange(ev: any) {
