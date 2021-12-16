@@ -1,11 +1,22 @@
 import './style.css';
 
-import { Chart, ChartOptions, ChartEvent, Point, ChartConfiguration } from 'chart.js/auto';
-// import { getRelativePosition } from 'chart.js/helpers';
-import * as dragData from 'chartjs-plugin-dragdata';
-import {CrosshairPlugin,Interpolate} from 'chartjs-plugin-crosshair';
-// import ChartJSdragSegment from 'chartjs-plugin-dragsegment';
-// import { select } from 'd3-selection';
+import {
+  Chart,
+  ChartEvent,
+  Point,
+  ChartConfiguration,
+  Interaction,
+} from 'chart.js/auto';
+
+import dragData from 'chartjs-plugin-dragdata';
+import zoomPlugin from 'chartjs-plugin-zoom';
+
+// no import method yields a usable object....
+// import CrosshairPlugin from 'chartjs-plugin-crosshair';  // this one imports an empty object
+// import Interpolate from 'chartjs-plugin-crosshair';
+import * as CrossHair from 'chartjs-plugin-crosshair'; // this one imports undefined
+
+// import ChartJSdragSegment  from 'chartjs-plugin-dragsegment'; // API incompatible (chart.js 2.x?)
 
 const DATA_COUNT = 7;
 
@@ -15,11 +26,12 @@ const ctx = (
 
 const tempRange = document.getElementById('tempRange');
 tempRange.addEventListener('change', onTempValueChange);
+console.log(`crosshair: ${JSON.stringify(CrossHair)}`);
+// console.log(`dragdate: ${JSON.stringify(ChartJSdragDataPlugin)}`);
+// const plugins = [CH.CrosshairPlugin];
 
-const plugins = [dragData,];
-// const plugins = [ChartJSdragSegment];
-
-Chart.register(plugins);
+Chart.register(dragData, zoomPlugin, CrossHair.default);
+// Interaction.modes.interpolate = Interpolate;
 
 const config: ChartConfiguration = {
   type: 'line',
@@ -28,19 +40,26 @@ const config: ChartConfiguration = {
     datasets: [
       {
         label: '  Temperature',
-        data: [{x:1,y:10},{x:2,y:13},{x:3,y:13},{x:4,y:15},{x:5,y:7}, {x:6,y:9}],
+        data: [
+          { x: 1, y: 10 },
+          { x: 2, y: 13 },
+          { x: 3, y: 13 },
+          { x: 4, y: 15 },
+          { x: 5, y: 7 },
+          { x: 6, y: 9 },
+        ],
         borderWidth: 2,
         borderColor: '#ff0016',
         backgroundColor: '#11aa88',
-        hidden: false
+        hidden: false,
       },
-     /* {
+      /*{
         data: [11, 12.5, 12.8, 14, 4.4, 8.5],
         borderWidth: 1,
         borderColor: 'rgba(255,0,0,0.4)',
         backgroundColor: 'rgba(255,0,0,0)',
-      },
-      {
+      },*/
+      /*{
         data: [10.5, 12.3, 12.6, 13.8, 3, 7.9],
         borderWidth: 2,
         borderColor: 'rgba(255,0,0,0.1)',
@@ -80,23 +99,25 @@ const config: ChartConfiguration = {
       y: {
         min: 0,
         max: 20,
+        // suggestedMin:1,
+        // suggestedMax:19
       },
       x: {
         type: 'linear',
         title: {
           display: true,
-          text: 'Foo'
+          text: 'Foo',
         },
         ticks: {
-          callback: function(val:number, index) {
+          callback: function (val: number, index) {
             // Hide every 2nd tick label
             return val % 2 === 0 ? String(val) : '';
           },
           color: 'green',
         },
         min: 0,
-        max: 10
-      }
+        max: 10,
+      },
     },
     // drag segment is not working with 3.6.1
     //
@@ -156,6 +177,28 @@ const config: ChartConfiguration = {
       return true;
     },
     plugins: {
+      zoom: {
+        pan: {
+          enabled: true,
+          mode: 'xy',
+          modifierKey: 'alt',
+          overScaleMode: undefined,
+          threshold: 10,
+        },
+        limits: {
+          x: { min: -1, max: 15 },
+          y: { min: -1, max: 25 },
+        },
+        zoom: {
+          wheel: {
+            enabled: true,
+          },
+          pinch: {
+            enabled: true,
+          },
+          mode: 'xy',
+        },
+      },
       legend: {
         labels: {
           filter: function (item, chart) {
@@ -166,9 +209,8 @@ const config: ChartConfiguration = {
       },
 
       tooltip: {
-        
         mode: 'point',
-        intersect: false
+        intersect: false,
       },
 
       crosshair: {
@@ -177,8 +219,8 @@ const config: ChartConfiguration = {
           width: 1, // crosshair line width
         },
         sync: {
-          enabled: true, // enable trace line syncing with other charts
-          group: 1, // chart group
+          enabled: false, // enable trace line syncing with other charts
+          // group: 1, // chart group
           suppressTooltips: false, // suppress tooltips when showing a synced tracer
         },
         zoom: {
@@ -207,12 +249,15 @@ const config: ChartConfiguration = {
         onDragStart: function (e, datasetIndex, index, value) {
           // console.log(e)
         },
-        onDrag: function (e, datasetIndex, index, value: Point) {
+        onDrag: function (e, datasetIndex, index, value: number | Point) {
           e.target.style.cursor = 'grabbing';
           // console.log(e, datasetIndex, index, value)
+          if (typeof value === 'number') {
+            return value >= 2 && value <= 19;
+          }
           return value.y >= 2 && value.y <= 19;
         },
-        onDragEnd: function (e, datasetIndex, index, value:Point) {
+        onDragEnd: function (e, datasetIndex, index, value: number | Point) {
           e.target.style.cursor = 'default';
           console.log(datasetIndex, index, value);
           return false;
@@ -222,7 +267,7 @@ const config: ChartConfiguration = {
   },
 };
 
-const chart = new Chart(ctx,config);
+const chart = new Chart(ctx, config);
 
 tempRange.setAttribute('value', String(chart.data.datasets[0].borderWidth));
 
