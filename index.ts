@@ -1,37 +1,62 @@
 import './style.css';
 
+import colorLib, { Color } from '@kurkle/color';
+
 import {
   Chart,
   ChartEvent,
   Point,
   ChartConfiguration,
-  Interaction,
+  LineOptions,
 } from 'chart.js/auto';
 
 import dragData from 'chartjs-plugin-dragdata';
 import zoomPlugin from 'chartjs-plugin-zoom';
 
-// no import method yields a usable object....
-// import CrosshairPlugin from 'chartjs-plugin-crosshair';  // this one imports an empty object
-// import Interpolate from 'chartjs-plugin-crosshair';
-import * as CrossHair from 'chartjs-plugin-crosshair'; // this one imports undefined
+// CROSSHAIR no import method yields a stable, usable plugin object....
+// imports undefined
+// import CrosshairPlugin from 'chartjs-plugin-crosshair';
 
+// import CrosshairPlugin from 'chartjs-plugin-crosshair'; // this one imports undefined
+// import Interpolate from 'chartjs-plugin-crosshair';
+
+/* this one imports an object with one entry "default": {} resulting in an   
+   error on initializing the chart plugins when resgistered as imported
+   if registered via CrosshairPlugin.default, the chart is being drawn,
+   but the crosshair/zoom does still not work
+   Debugging shows, the register method did not fail, but didn't insert anything into the plugin registry either
+*/
+import * as CrosshairPlugin from 'chartjs-plugin-crosshair';
+import { LineElement, LineProps, Segment, TooltipItem } from 'chart.js';
+
+// DRAG SEGMENT: API incompatible!
 // import ChartJSdragSegment  from 'chartjs-plugin-dragsegment'; // API incompatible (chart.js 2.x?)
 
 const DATA_COUNT = 7;
-
+let col: Color;
 const ctx = (
   document.getElementById('myChart') as HTMLCanvasElement
 ).getContext('2d');
 
 const tempRange = document.getElementById('tempRange');
 tempRange.addEventListener('change', onTempValueChange);
-console.log(`crosshair: ${JSON.stringify(CrossHair)}`);
+
+const selPos = document.getElementById('posSel');
+selPos.addEventListener('change', onSelectionPositionChange);
+
+console.log(`crosshair: ${JSON.stringify(CrosshairPlugin)}`);
 // console.log(`dragdate: ${JSON.stringify(ChartJSdragDataPlugin)}`);
 // const plugins = [CH.CrosshairPlugin];
 
-Chart.register(dragData, zoomPlugin, CrossHair.default);
-// Interaction.modes.interpolate = Interpolate;
+Chart.register(dragData, zoomPlugin, CrosshairPlugin.default);
+//Interaction.modes.interpolate = Interpolate;
+
+const reg = Chart.registry.plugins;
+
+const selectionBarData = [
+  { x: 2.5, y: -0.5 },
+  { x: 2.5, y: 20 },
+];
 
 const config: ChartConfiguration = {
   type: 'line',
@@ -50,8 +75,32 @@ const config: ChartConfiguration = {
         ],
         borderWidth: 2,
         borderColor: '#ff0016',
-        backgroundColor: '#11aa88',
+        backgroundColor: '#00ffee',
         hidden: false,
+        fill: false,
+        segment: {
+          borderWidth: (ctx, opt) => (ctx.p0.y === ctx.p1.y ? 10 : undefined),
+          borderColor: (ctx, opt) =>
+            ctx.p0.y === ctx.p1.y
+              ? colorLib('#ffaa00').alpha(0.2).rgbString()
+              : undefined,
+          backgroundColor: (ctx, opt) => {
+            //console.log('line', l.start);
+            return ctx.p0.y === ctx.p1.y ? '#ffffff' : undefined;
+          },
+          borderCapStyle: () => undefined,
+          borderDash: () => undefined,
+          borderDashOffset: () => undefined,
+          borderJoinStyle: () => undefined,
+        },
+      },
+      {
+        label: undefined,
+        data: selectionBarData,
+        borderWidth: 35,
+        borderColor: colorLib('#ff00aa').alpha(0.2).rgbString(),
+        radius: 0,
+        fill: false,
       },
       /*{
         data: [11, 12.5, 12.8, 14, 4.4, 8.5],
@@ -64,10 +113,18 @@ const config: ChartConfiguration = {
         borderWidth: 2,
         borderColor: 'rgba(255,0,0,0.1)',
         backgroundColor: 'rgba(255,0,0,0)',
-      },
+      },*/
       {
         label: '  Pressure',
-        data: [12, 19, 3, 5, 2, 3],
+        data: [
+          { x: 1, y: 4 },
+          { x: 2, y: 5 },
+          { x: 3.5, y: 4 },
+          { x: 4, y: 3 },
+          { x: 5, y: 7 },
+          { x: 6, y: 11 },
+          { x: 7, y: 10 },
+        ],
         fill: false,
         tension: 0.0,
         borderWidth: 1,
@@ -81,7 +138,7 @@ const config: ChartConfiguration = {
         rotation: 45,
         stepped: 'middle', // true/false, 'before', ' middle' 'after'
       },
-      {
+      /*{
         label: '  Velocity',
         data: [7, 11, 5, 8, 3, 7],
         fill: false,
@@ -97,12 +154,21 @@ const config: ChartConfiguration = {
   options: {
     scales: {
       y: {
+        //offset: true,
         min: 0,
         max: 20,
-        // suggestedMin:1,
-        // suggestedMax:19
+        bounds: 'data',
+        //suggestedMin: 0,
+        //suggestedMax: 20,
+        ticks: {
+          stepSize: 2,
+        },
       },
       x: {
+        /*position: {
+          y: 4,
+        },*/
+        //offset: true,
         type: 'linear',
         title: {
           display: true,
@@ -117,6 +183,7 @@ const config: ChartConfiguration = {
         },
         min: 0,
         max: 10,
+        // bounds: 'data'
       },
     },
     // drag segment is not working with 3.6.1
@@ -167,6 +234,8 @@ const config: ChartConfiguration = {
     },
     onClick: function (e: ChartEvent) {
       console.log(
+        `chart ev ${e.type}@${e.x},${e.y}`,
+
         chart.getElementsAtEventForMode(
           e.native,
           'dataset', // index, dataset, point, nearest, x,y
@@ -211,6 +280,20 @@ const config: ChartConfiguration = {
       tooltip: {
         mode: 'point',
         intersect: false,
+        bodyColor: '#000000',
+        backgroundColor: colorLib('#ffffff').alpha(0.6).rgbString(),
+        borderWidth: 1,
+        borderColor: '#000000',
+        titleColor: '#000000',
+        footerColor: '#ffffff',
+        cornerRadius: 0,
+        callbacks: {
+          title: (ttips: TooltipItem<'line'>[]) => {
+            console.log(ttips[0].dataset);
+            return 'My-Title';
+          },
+          label: (ttips) => 'mylabel',
+        },
       },
 
       crosshair: {
@@ -275,5 +358,13 @@ export function onTempValueChange(ev: any) {
   ev.preventDefault();
   console.log(`changed ${this}: ${ev.target.value}`);
   chart.data.datasets[0].borderWidth = ev.target.value;
+  setTimeout(() => chart.update('none'), 100);
+}
+
+export function onSelectionPositionChange(ev: any) {
+  ev.preventDefault;
+  const val = ev.target.value;
+  selectionBarData[0].x = val;
+  selectionBarData[1].x = val;
   setTimeout(() => chart.update('none'), 100);
 }
