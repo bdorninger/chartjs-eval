@@ -68,10 +68,10 @@ const config: ChartConfiguration = {
         data: [
           { x: 1, y: 10 },
           { x: 2, y: 13 },
-          { x: 3, y: 13 },
+          { x: 3, y: 13.2 },
           { x: 4, y: 15 },
-          { x: 5, y: 7 },
-          { x: 6, y: 9 },
+          { x: 5, y: 17 },
+          { x: 6, y: 18 },
         ],
         borderWidth: 2,
         borderColor: '#ff0016',
@@ -95,7 +95,20 @@ const config: ChartConfiguration = {
         },
       },
       {
+        label: '  Temperature HiLite',
+        data: [
+          { x: 2, y: 13 },
+          { x: 3, y: 13.2 },
+        ],
+        borderWidth: 10,
+        borderColor: colorLib('#ffaa00').alpha(0.4).rgbString(),
+        backgroundColor: '#00ffee',
+        hidden: false,
+        fill: false,
+      },
+      {
         label: undefined,
+        hidden: true,
         data: selectionBarData,
         borderWidth: 35,
         borderColor: colorLib('#ff00aa').alpha(0.2).rgbString(),
@@ -115,7 +128,33 @@ const config: ChartConfiguration = {
         backgroundColor: 'rgba(255,0,0,0)',
       },*/
       {
-        label: '  Pressure',
+        label: '  Pressure hi',
+        data: [
+          { x: 1, y: 6 },
+          { x: 2, y: 5.5 },
+          { x: 3.5, y: 4.7 },
+          { x: 4, y: 3.7 },
+          { x: 5, y: 8 },
+          /*{ x: 6, y: 12 },
+          { x: 7, y: 11.5 },*/
+        ],
+
+        fill: '+1',
+        tension: 0.0,
+        borderWidth: 3,
+
+        borderColor: colorLib('#0d0cff').alpha(0.4).rgbString(),
+        backgroundColor: colorLib('#035000').alpha(0.4).rgbString(),
+        pointHitRadius: 25,
+        borderCapStyle: 'square',
+        borderJoinStyle: 'bevel', // round, miter
+        pointStyle: 'rect', // "circle" | "cross" | "crossRot" | "dash" | "line" | "rect" | "rectRounded" | "rectRot" | "star" | "triangle" | HTMLImageElement | HTMLCanvasElemen
+        radius: 6,
+        rotation: 45,
+        // stepped: 'middle', // true/false, 'before', ' middle' 'after'
+      },
+      {
+        label: '  Pressure act',
         data: [
           { x: 1, y: 4 },
           { x: 2, y: 5 },
@@ -125,19 +164,47 @@ const config: ChartConfiguration = {
           { x: 6, y: 11 },
           { x: 7, y: 10 },
         ],
+
         fill: false,
         tension: 0.0,
-        borderWidth: 1,
+        borderWidth: 3,
         borderColor: '#4dc9f6',
-        backgroundColor: '#000000',
+        backgroundColor: '#035000',
         pointHitRadius: 25,
         borderCapStyle: 'square',
         borderJoinStyle: 'bevel', // round, miter
         pointStyle: 'rect', // "circle" | "cross" | "crossRot" | "dash" | "line" | "rect" | "rectRounded" | "rectRot" | "star" | "triangle" | HTMLImageElement | HTMLCanvasElemen
         radius: 6,
         rotation: 45,
-        stepped: 'middle', // true/false, 'before', ' middle' 'after'
+        // stepped: 'middle', // true/false, 'before', ' middle' 'after'
       },
+      {
+        label: '  Pressure lo',
+        data: [
+          { x: 1, y: 2 },
+          { x: 2, y: 3.5 },
+          { x: 3.5, y: 2 },
+          { x: 4, y: 1.9 },
+          { x: 5, y: 6 },
+          { x: 6, y: 8 },
+          { x: 7, y: 7.5 },
+        ],
+
+        fill: '-1',
+        tension: 0.0,
+        borderWidth: 3,
+
+        borderColor: colorLib('#ff0c00').alpha(0.4).rgbString(),
+        backgroundColor: colorLib('#f35a0f').alpha(0.4).rgbString(),
+        pointHitRadius: 25,
+        borderCapStyle: 'square',
+        borderJoinStyle: 'bevel', // round, miter
+        pointStyle: 'rect', // "circle" | "cross" | "crossRot" | "dash" | "line" | "rect" | "rectRounded" | "rectRot" | "star" | "triangle" | HTMLImageElement | HTMLCanvasElemen
+        radius: 6,
+        rotation: 45,
+        // stepped: 'middle', // true/false, 'before', ' middle' 'after'
+      },
+
       /*{
         label: '  Velocity',
         data: [7, 11, 5, 8, 3, 7],
@@ -296,7 +363,7 @@ const config: ChartConfiguration = {
         },
       },
 
-      crosshair: {
+      /* crosshair: {
         line: {
           color: '#F66', // crosshair line color
           width: 1, // crosshair line width
@@ -324,7 +391,7 @@ const config: ChartConfiguration = {
               // called after zoom
             },
         },
-      },
+      },*/
       //
       dragData: {
         round: 1,
