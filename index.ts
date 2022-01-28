@@ -308,7 +308,8 @@ const config: ChartConfiguration = {
           'dataset', // index, dataset, point, nearest, x,y
           { intersect: false },
           false
-        )
+        ),
+        e
       );
       return true;
     },
@@ -356,7 +357,7 @@ const config: ChartConfiguration = {
         cornerRadius: 0,
         callbacks: {
           title: (ttips: TooltipItem<'line'>[]) => {
-            console.log(ttips[0].dataset);
+            //console.log(ttips[0].dataset);
             return 'My-Title';
           },
           label: (ttips) => 'mylabel',
