@@ -1,3 +1,5 @@
+///
+
 import './style.css';
 
 import colorLib, { Color } from '@kurkle/color';
@@ -10,8 +12,10 @@ import {
   LineOptions,
 } from 'chart.js/auto';
 
-import dragData from 'chartjs-plugin-dragdata';
-import zoomPlugin from 'chartjs-plugin-zoom';
+// import dragData from 'chartjs-plugin-dragdata';
+// import zoomPlugin from 'chartjs-plugin-zoom';
+
+// import { TracePlugin } from './trace';
 
 // CROSSHAIR no import method yields a stable, usable plugin object....
 // imports undefined
@@ -26,8 +30,10 @@ import zoomPlugin from 'chartjs-plugin-zoom';
    but the crosshair/zoom does still not work
    Debugging shows, the register method did not fail, but didn't insert anything into the plugin registry either
 */
-import * as CrosshairPlugin from 'chartjs-plugin-crosshair';
+// import { CrosshairPlugin, Interpolate } from 'chartjs-plugin-crosshair';
+//import * as CrosshairPlugin from 'chartjs-plugin-crosshair';
 import { LineElement, LineProps, Segment, TooltipItem } from 'chart.js';
+import { ChartJSdragDataPlugin } from './drag';
 
 // DRAG SEGMENT: API incompatible!
 // import ChartJSdragSegment  from 'chartjs-plugin-dragsegment'; // API incompatible (chart.js 2.x?)
@@ -44,14 +50,15 @@ tempRange.addEventListener('change', onTempValueChange);
 const selPos = document.getElementById('posSel');
 selPos.addEventListener('change', onSelectionPositionChange);
 
-console.log(`crosshair: ${JSON.stringify(CrosshairPlugin)}`);
+// const crosshair = new TracePlugin();
+//console.log(`crosshair: ${JSON.stringify(crosshair)}`, crosshair.id);
 // console.log(`dragdate: ${JSON.stringify(ChartJSdragDataPlugin)}`);
 // const plugins = [CH.CrosshairPlugin];
-
-Chart.register(dragData, zoomPlugin, CrosshairPlugin.default);
+const dragData = ChartJSdragDataPlugin;
+Chart.register(dragData /*crosshair*/);
 //Interaction.modes.interpolate = Interpolate;
 
-const reg = Chart.registry.plugins;
+// const reg = Chart.registry.plugins;
 
 const selectionBarData = [
   { x: 2.5, y: -0.5 },
@@ -345,7 +352,7 @@ const config: ChartConfiguration = {
         },
       },
 
-      tooltip: {
+      /*tooltip: {
         mode: 'point',
         intersect: false,
         bodyColor: '#000000',
@@ -362,56 +369,76 @@ const config: ChartConfiguration = {
           },
           label: (ttips) => 'mylabel',
         },
-      },
-
-      /* crosshair: {
-        line: {
-          color: '#F66', // crosshair line color
-          width: 1, // crosshair line width
-        },
-        sync: {
-          enabled: false, // enable trace line syncing with other charts
-          // group: 1, // chart group
-          suppressTooltips: false, // suppress tooltips when showing a synced tracer
-        },
-        zoom: {
-          enabled: true, // enable zooming
-          zoomboxBackgroundColor: 'rgba(66,133,244,0.2)', // background color of zoom box
-          zoomboxBorderColor: '#48F', // border color of zoom box
-          zoomButtonText: 'Reset Zoom', // reset zoom button text
-          zoomButtonClass: 'reset-zoom', // reset zoom button class
-        },
-        callbacks: {
-          beforeZoom: () =>
-            function (start, end) {
-              // called before zoom, return false to prevent zoom
-              return true;
-            },
-          afterZoom: () =>
-            function (start, end) {
-              // called after zoom
-            },
-        },
       },*/
+
+      // crosshair: {
+      //   line: {
+      //     color: '#0f6', // crosshair line color
+      //     width: 1, // crosshair line width
+      //   },
+      //   sync: {
+      //     enabled: false, // enable trace line syncing with other charts
+      //     group: 1, // chart group
+      //     suppressTooltips: false, // suppress tooltips when showing a synced tracer
+      //   },
+      //   zoom: {
+      //     enabled: false,
+      //   },
+      //   /*zoom: {
+      //     enabled: true, // enable zooming
+      //     zoomboxBackgroundColor: 'rgba(66,133,244,0.2)', // background color of zoom box
+      //     zoomboxBorderColor: '#48F', // border color of zoom box
+      //     zoomButtonText: 'Reset Zoom', // reset zoom button text
+      //     zoomButtonClass: 'reset-zoom', // reset zoom button class
+      //   },*/
+      //   /*callbacks: {
+      //     beforeZoom: () =>
+      //       function (start, end) {
+      //         // called before zoom, return false to prevent zoom
+      //         return true;
+      //       },
+      //     afterZoom: () =>
+      //       function (start, end) {
+      //         // called after zoom
+      //       },
+      //   },*/
+      // },
       //
       dragData: {
         round: 1,
         showTooltip: true,
+        dragX: true,
+        dragY: true,
+        magnet: {
+          to: (data) => {
+            console.log(`magnet`, data);
+            return data;
+          },
+        },
         onDragStart: function (e, datasetIndex, index, value) {
           // console.log(e)
         },
         onDrag: function (e, datasetIndex, index, value: number | Point) {
           e.target.style.cursor = 'grabbing';
-          // console.log(e, datasetIndex, index, value)
+          console.log('Dragging', e, datasetIndex, index, value);
           if (typeof value === 'number') {
             return value >= 2 && value <= 19;
           }
-          return value.y >= 2 && value.y <= 19;
+          const ret = { ...value };
+          if (value.y < 2) {
+            ret.y = 2;
+          }
+          if (value.y > 19) {
+            ret.y = 19;
+          }
+          console.log('returning: ', ret);
+          return ret;
+
+          // return value.y >= 2 && value.y <= 19;
         },
         onDragEnd: function (e, datasetIndex, index, value: number | Point) {
           e.target.style.cursor = 'default';
-          console.log(datasetIndex, index, value);
-          return false;
+          console.log(`final value ${value}`, datasetIndex, index, value);
         },
       },
     },
